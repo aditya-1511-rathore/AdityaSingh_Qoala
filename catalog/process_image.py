@@ -1,55 +1,47 @@
-import pytesseract
-import re
 import cv2 as cv
 import os
 
-# load tesseract to process the image
-def ocr_core(image_data):
-    
-    pytesseract.pytesseract.tesseract_cmd = r"C:\Program Files\Tesseract-OCR\tesseract.exe"
 
-    text = pytesseract.image_to_string(image_data)
-    return text
-    
+import easyocr
+reader = easyocr.Reader(['en'])
+import re
 
-# function to extract the id from the array of values
 def get_id(inputs):
-    id = None
-    for i in inputs:
-        x = re.search(r"[0-9]\s[0-9][0-9][0-9][0-9]\s[0-9][0-9][0-9][0-9][0-9]\s[0-9][0-9]\s[0-9]", i)
-        if x is not None:
-            id = x.group()
+    x = re.search(r"[0-9]\s[0-9][0-9][0-9][0-9]\s[0-9][0-9][0-9][0-9][0-9]\s[0-9][0-9]\s[0-9]", inputs)
+    if x is not None:
+        id = x.group()
 
     return id
 
-# function to extract the name from the array of values
-def get_name(inputs):
-    for i in inputs:
-        if "name " in i and not "lastname" in i:
-            return i[i.index("name ")+5:]
 
-# function to extract the last name from the array of values
+def get_name(inputs):
+    if "Name" in inputs:
+        return inputs[inputs.index("Name")+1]
+    if "name" in inputs:
+        return inputs[inputs.index("name")+1]
+    
+
 def last_name(inputs):
-    for i in inputs:
-        if "lastname " in i:
-            return i[i.index("lastname ")+9:]
-        if "last name " in i:
-            return i[i.index("last name ")+10:]
-        
-# function to extract the dates from the array of values
+    if "Last name" in inputs:
+        return inputs[inputs.index("Last name")+1]
+    if "last name" in inputs:
+        return inputs[inputs.index("last name")+1]
+    if "Last Name" in inputs:
+        return inputs[inputs.index("Last Name")+1]
+    if "last Name" in inputs:
+        return inputs[inputs.index("last Name")+1]
+    
+
 def dates(inputs):
     dats = []
-    regex_statement = r"[0-9][0-9]\s[a-z][a-z][a-z]\,\s[0-9][0-9][0-9][0-9]|[0-9][0-9]\s[a-z][a-z][a-z]\.\s[0-9][0-9][0-9][0-9]"
-    for i in inputs:
-        for m in re.finditer(regex_statement,i):
-            # print(m.start(), m.end())
-            dats.append(i[int(m.start()): int(m.end())+1].replace(",","").replace(".",""))
+    regex_statement = r"[0-9][0-9]\s[a-z][a-z][a-z]\s[0-9][0-9][0-9][0-9]"
+    for m in re.finditer(regex_statement,inputs):
+        dats.append(inputs[int(m.start()): int(m.end())+1].replace(",","").replace(".",""))
+    
     return dats
 
 
-
 def process_image(image_data):
-    
     status = False
     image_path = os.getcwd()+"\\ocr_images\\"+str(image_data)
 
@@ -59,51 +51,46 @@ def process_image(image_data):
     ret, thresh = cv.threshold(img_gray, 115, 255, cv.THRESH_BINARY)
 
     cv.imwrite(image_path, thresh) #save image to the same name and location 
-    
-    # extract text from tesseract
-    ocr_text = ocr_core(image_path).lower().split("\n")
 
-    # error handling of the resulting data
+    result = reader.readtext(image_path, detail = 0)
+
+    res = " ".join(result).replace(".","").replace(",","")
     try:
-        id_number = get_id(ocr_text)
+        id_number = get_id(res)
     except:
         return "Error"
+    
     try:
-        name = get_name(ocr_text)
-        for i in ["miss","mr","mrs","ms"]:
-            if i in name: 
-                name.replace(i,i+".")
+        name = get_name(result)
     except:
         name = "Unknown"
+
     try:
-        last_name_value = last_name(ocr_text)
+        last_name_value = last_name(result)
     except:
         last_name_value = "Unknown"
     try:
-        dats = dates(ocr_text)
-        if len(dats) == 3:
-            status = True
-        elif len(dats) == 2:
-            dats.append("-")
-        elif len(dats)>3:
-            dats = dats[1:]
-            status = True
-        elif len(dats) == 1:
-            dats.append("-")
-            dats.append("-")
-        else:
-            dats = ["-","-","-"]
-    except:
-            dats = ["-","-","-"]
+        dats = dates(res.lower())
+        if len(dats)==3:
+            dats = dats.insert(1, "")
+        if len(dats) < 3:
+            dats.append("")
+            dats.append("")
+            dats.append("")
+        if len(dats) > 4:
+            dats = dats[:4]
         
+        status = True
+    except:
+        dats = ["","","",""]
     result = {
         'id': id_number,
         'name': name,
         'last_name': last_name_value,
         'date-of-birth' : dats[0],
-        'date-of-issue': dats[1],
-        'date-of-expiry': dats[2],
+        'date-of-issue': dats[2],
+        'date-of-expiry': dats[3],
         "status":status
     }
 
-    return result, " ".join(ocr_text)
+    return result, ""

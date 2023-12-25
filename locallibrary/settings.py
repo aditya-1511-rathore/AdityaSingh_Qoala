@@ -25,7 +25,7 @@ SECRET_KEY = 'django-insecure-7qdeft_+1r$7&*@8wyx=6fc-d^j-4xp262kk^-ntda_zr0bz$#
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['*']
 
 
 # Application definition
@@ -100,11 +100,6 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-AUTHENTICATION_BACKENDS = [
-    'social_core.backends.google.GoogleOAuth2',
-    'django.contrib.auth.backends.ModelBackend',
-]
-
 
 # Internationalization
 # https://docs.djangoproject.com/en/4.2/topics/i18n/
@@ -126,7 +121,10 @@ STATIC_URL = '/ocr_images/'
 STATICFILES_DIRS = [
     os.path.join(BASE_DIR, "ocr_images"),
     '/ocr_images/',
+    os.path.join(BASE_DIR, 'static'),
 ]
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+
 
 
 # Default primary key field type

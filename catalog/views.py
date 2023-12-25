@@ -1,9 +1,9 @@
 from django.shortcuts import render, redirect
 from .forms import OCRForm
 from .models import OCRResult
-import pytesseract
-from PIL import Image
-from io import BytesIO
+# import pytesseract
+# from PIL import Image
+# from io import BytesIO
 from django.http import JsonResponse
 from .forms import OCRForm
 from .process_image import process_image
@@ -65,7 +65,8 @@ def previous(request):
                 ocr_val.date_of_issue = request.POST["doi"]
                 ocr_val.success = True
                 ocr_val.save()
-                return redirect(f"/previous?id={request.GET["id"]}")
+                id_red = request.GET["id"]
+                return redirect(f"/previous?id={id_red}")
         if "exist" in request.GET.keys():
             return render(request, "item.html", context={"data":OCRResult.objects.get(id_number = request.GET["id"]),"exist":True})
 

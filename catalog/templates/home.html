@@ -84,6 +84,18 @@
             color: #bdc3c7;  /* Lighter font color */
             margin-top: 0;
         }
+        .loading{
+            position: absolute;
+            top: 0;
+            left: 0;
+            height: 100vh;
+            width: 100vw;
+            background: url("/ocr_images/loading.gif");
+            background-repeat: no-repeat;
+            background-position: center;
+            z-index: 100;
+            display: none;
+        }
     </style>
 </head>
 <body>
@@ -96,9 +108,17 @@
             <label for="image">Choose a Thai ID Card Image:</label>
             <input type="file" id="image" name="image" accept=".png, .jpg, .jpeg" required>
             <p>Accepted formats: .jpg, .jpeg, .png | Max file size: 2MB</p>
-            <input type="submit" value="Submit">
+            <input type="submit" value="Submit" id="submit_btn">
         </form>
+    </div>
+    <div class="loading">
+
     </div>
     <a onclick="window.location.href='/previous'" style="width: 400px; background-color: #34495e; border-radius: 12px; height: 50px; display:grid; place-items: center; margin-top: 30px; cursor: pointer;">View Previous Results</a>
 </body>
+<script>
+document.getElementById("submit_btn").addEventListener("click",()=>{
+    document.getElementsByClassName("loading")[0].style.display = "block";
+})
+</script>
 </html>
