@@ -37,6 +37,7 @@ def dates(inputs):
     regex_statement = r"[0-9][0-9]\s[a-z][a-z][a-z]\s[0-9][0-9][0-9][0-9]"
     for m in re.finditer(regex_statement,inputs):
         dats.append(inputs[int(m.start()): int(m.end())+1].replace(",","").replace(".",""))
+        print(dats)
     
     return dats
 
@@ -46,15 +47,16 @@ def process_image(image_data):
     image_path = os.getcwd()+"\\ocr_images\\"+str(image_data)
 
     # load image to open to to make it binary with the set threshold
-    img = cv.imread(image_path)
-    img_gray = cv.cvtColor(img, cv.COLOR_BGR2GRAY)
-    ret, thresh = cv.threshold(img_gray, 115, 255, cv.THRESH_BINARY)
+    # img = cv.imread(image_path)
+    # img_gray = cv.cvtColor(img, cv.COLOR_BGR2GRAY)
+    # ret, thresh = cv.threshold(img_gray, 115, 255, cv.THRESH_BINARY)
 
-    cv.imwrite(image_path, thresh) #save image to the same name and location 
+    # cv.imwrite(image_path, thresh) #save image to the same name and location 
 
     result = reader.readtext(image_path, detail = 0)
 
-    res = " ".join(result).replace(".","").replace(",","")
+    res = " ".join(result).replace(".","").replace(",","").replace(":","")
+    print(res)
     try:
         id_number = get_id(res)
     except:
@@ -70,26 +72,33 @@ def process_image(image_data):
     except:
         last_name_value = "Unknown"
     try:
+        new_dats = []
+        months = ["jan","feb","mar","apr","may","jun","jul","aug","sep","oct","nov","dec"]
         dats = dates(res.lower())
-        if len(dats)==3:
-            dats = dats.insert(1, "")
-        if len(dats) < 3:
-            dats.append("")
-            dats.append("")
-            dats.append("")
-        if len(dats) > 4:
-            dats = dats[:4]
-        
-        status = True
+        for i in dats: 
+            if i.split(" ")[1].lower() in months:
+                new_dats.append(i)
+        print(dats)
+        if len(new_dats)==2:
+            new_dats.append("")
+            status = False
+        elif len(new_dats) < 2:
+            new_dats.append("")
+            new_dats.append("")
+            new_dats.append("")
+            status = False
+        else:
+            status = True
     except:
-        dats = ["","","",""]
+        new_dats = ["","","","","",""]
+        status = False
     result = {
         'id': id_number,
         'name': name,
         'last_name': last_name_value,
-        'date-of-birth' : dats[0],
-        'date-of-issue': dats[2],
-        'date-of-expiry': dats[3],
+        'date-of-birth' : new_dats[0],
+        'date-of-issue': new_dats[1],
+        'date-of-expiry': new_dats[2],
         "status":status
     }
 
